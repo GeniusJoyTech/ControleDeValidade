@@ -18,7 +18,7 @@
 <body>
 
     <div class="container">
-        <h1>Controle de validades</h1>
+        <h1>Editor de Linhas</h1>
 
         <table class="table table-bordered" id="editor">
             <tr>
@@ -78,14 +78,15 @@
                 dados.push(linhaDados);
             }
 
+            // Cria o conteúdo do arquivo CSV com delimitador de ponto e vírgula
             var csvContent = "data:text/csv;charset=utf-8,";
 
             // Adiciona a linha de cabeçalho
-            csvContent += Object.keys(dados[0]).join(',') + '\n';
+            csvContent += Object.keys(dados[0]).join(';') + '\n';
 
             // Adiciona os dados
             dados.forEach(function(linhaDados) {
-                csvContent += Object.values(linhaDados).join(',') + '\n';
+                csvContent += Object.values(linhaDados).join(';') + '\n';
             });
 
             // Obtém a data de hoje

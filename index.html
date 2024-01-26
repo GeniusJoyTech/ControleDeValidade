@@ -1,35 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Linhas</title>
-    <!-- Adicione o link para o Bootstrap CSS -->
+    <title>Controle de validades.</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .coluna {
             margin-right: 10px;
         }
+
         .container {
             margin-top: 20px;
-            margin-bottom: 100px; /* Ajuste de margem inferior para evitar que o rodapé sobreponha o conteúdo */
+            margin-bottom: 100px;
         }
+
         footer {
-            background-color: #f8f9fa;
             padding: 20px 0;
             width: 100%;
         }
+
+        .custom-file {
+            margin-bottom: 8px;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="container">
         <h1>Editor de Linhas</h1>
 
+        <div class="custom-file">
+            <input type="file" id="fileInput" class="custom-file-input" accept=".csv" onchange="handleFile()">
+            <label class="custom-file-label" for="fileInput">Clique aqui para enviar um arquivo csv</label>
+        </div>
+
         <table class="table table-bordered" id="editor">
             <tr>
                 <td><input type="text" class="coluna form-control" name="funcionário" placeholder="Seu nome"></td>
-                <td><input type="text" class="coluna form-control" name="Estabelecimento" placeholder="Estabelecimento"></td>
+                <td><input type="text" class="coluna form-control" name="Estabelecimento" placeholder="Estabelecimento">
+                </td>
             </tr>
             <tr>
                 <td><input type="text" class="coluna form-control" name="Produto" placeholder="Produto"></td>
@@ -47,76 +59,102 @@
         </div>
     </footer>
 
-    <!-- Adicione os scripts do Bootstrap e jQuery no final do corpo para otimizar o carregamento -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
     <script>
         var linhas = 2;
-        function adicionarLinha() {
-            linhas++;
-            var tabela = document.getElementById("editor");
-            
-            var novaLinha = tabela.insertRow();
-            var colunaProduto = novaLinha.insertCell(0);
-            var colunaQuantidade = novaLinha.insertCell(1);
-            var colunaValidade = novaLinha.insertCell(2);
 
-            colunaProduto.innerHTML = '<input type="text" class="coluna form-control" placeholder="Produto" name="Produto_' + linhas + '">';
-            colunaQuantidade.innerHTML = '<input type="number" class="coluna form-control" placeholder="Quantidade" name="Quantidade_' + linhas + '">';
-            colunaValidade.innerHTML = '<input type="date" class="coluna form-control" placeholder="Validade" name="Validade_' + linhas + '">';
+        function adicionarLinha() {
+            var tabela = document.getElementById("editor");
+
+            var novaLinha = tabela.insertRow();
+            var tiposInput = ["text", "number", "date"];
+            var placeholders = ["Produto", "Quantidade", "Validade"];
+
+            for (var i = 0; i < tiposInput.length; i++) {
+                var coluna = novaLinha.insertCell(i);
+                coluna.innerHTML = '<input type="' + tiposInput[i] + '" class="coluna form-control" placeholder="' + placeholders[i] + '" name="Campo_' + (linhas) + '_' + (i + 1) + '">';
+            }
+            linhas++;
         }
-    
+
+
+        function handleFile() {
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var csvContent = e.target.result;
+                    var linhas = csvContent.split('\n');
+
+                    for (var i = 0; i < linhas.length; i++) {
+                        var colunas = linhas[i].split(';');
+
+                        // Verifica se a linha não está vazia antes de adicionar à tabela
+                        if (colunas.length > 1 || (colunas.length === 1 && colunas[0].trim() !== '')) {
+                            var tabela = document.getElementById("editor");
+                            var novaLinha = tabela.insertRow();
+
+                            for (var j = 0; j < colunas.length; j++) {
+                                var coluna = novaLinha.insertCell(j);
+                                coluna.innerHTML = '<input type="text" class="coluna form-control" value="' + colunas[j] + '" name="Campo_' + (i + 1) + '_' + (j + 1) + '">';
+                            }
+                        }
+                    }
+                };
+
+                reader.readAsText(file);
+                fileInput.value = '';
+            }
+        }
+
         function downloadTabela() {
             var linhasElementos = document.querySelectorAll('#editor tr');
             var dados = [];
 
-            // Obtém os valores de funcionário e Estabelecimento
             var funcionario = removerAcentos(document.querySelector('input[name="funcionário"]').value) || 'Funcionario';
             var estabelecimento = removerAcentos(document.querySelector('input[name="Estabelecimento"]').value) || 'Estabelecimento';
 
-            // Itera sobre as linhas da tabela, começando da segunda linha (índice 1) para evitar a linha de cabeçalho
             for (var i = 1; i < linhasElementos.length; i++) {
                 var linha = linhasElementos[i];
                 var inputs = linha.querySelectorAll('input');
                 var linhaDados = {};
 
-                inputs.forEach(function(input) {
+                inputs.forEach(function (input) {
                     linhaDados[input.name] = removerAcentos(input.value);
                 });
 
                 dados.push(linhaDados);
             }
 
-            // Cria o conteúdo do arquivo CSV com delimitador de ponto e vírgula
             var csvContent = "data:text/csv;charset=utf-8,";
 
-            // Adiciona a linha de cabeçalho
             csvContent += Object.keys(dados[0]).join(';') + '\n';
 
-            // Adiciona os dados
-            dados.forEach(function(linhaDados) {
+            dados.forEach(function (linhaDados) {
                 csvContent += Object.values(linhaDados).join(';') + '\n';
             });
 
-            // Obtém a data de hoje
             var dataAtual = new Date();
             var dataFormatada = `${dataAtual.getDate()}${dataAtual.getMonth() + 1}${dataAtual.getFullYear()}${dataAtual.getHours()}${dataAtual.getMinutes()}`;
 
-            // Cria um link para download do arquivo CSV
             var linkCSV = document.createElement('a');
             linkCSV.href = encodeURI(csvContent);
-            
-            // Define o nome do arquivo com base em Estabelecimento, Funcionário e Data
+
             linkCSV.download = `${estabelecimento}_${funcionario}_${dataFormatada}.csv`;
 
-            // Adiciona o link ao corpo do documento e simula o clique para iniciar o download do CSV
             document.body.appendChild(linkCSV);
             linkCSV.click();
 
-            // Remove o link do corpo do documento após o download do CSV
             document.body.removeChild(linkCSV);
+        }
+
+        function removerAcentos(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         }
 
         function removerAcentos(str) {
@@ -124,4 +162,5 @@
         }
     </script>
 </body>
+
 </html>

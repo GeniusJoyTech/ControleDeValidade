@@ -101,7 +101,11 @@
 
                             for (var j = 0; j < colunas.length; j++) {
                                 var coluna = novaLinha.insertCell(j);
-                                coluna.innerHTML = '<input type="text" class="coluna form-control" value="' + colunas[j] + '" name="Campo_' + (i + 1) + '_' + (j + 1) + '">';
+
+                                // Define o tipo do input com base na posição da coluna
+                                var tipoInput = j === 1 ? 'number' : (j === 2 ? 'date' : 'text');
+
+                                coluna.innerHTML = '<input type="' + tipoInput + '" class="coluna form-control" value="' + colunas[j] + '" name="Campo_' + (i + 1) + '_' + (j + 1) + '">';
                             }
                         }
                     }
@@ -111,6 +115,7 @@
                 fileInput.value = '';
             }
         }
+
 
         function downloadTabela() {
             var linhasElementos = document.querySelectorAll('#editor tr');
